@@ -40,6 +40,17 @@ def preprocess_arrays(img_array, mask_array):
     
     return img, mask
 
+def dataset_augmentation(dataset):
+    # x == img_array; y == mask_array
+    augmentation = dataset.map(lambda x, y:(tf.image.flip_left_right(x), tf.image.flip_left_right(y)))
+    dataset_augmented = tf.data.Dataset.concatenate(dataset, augmentation)
+    augmentation = dataset.map(lambda x, y:(tf.image.flip_up_down(x), tf.image.flip_up_down(y)))
+    dataset_augmented = tf.data.Dataset.concatenate(dataset_augmented, augmentation)
+    augmentation = dataset.map(lambda x, y:(tf.image.flip_left_right(x), tf.image.flip_left_right(y)))
+    augmentation = augmentation.map(lambda x, y:(tf.image.flip_up_down(x), tf.image.flip_up_down(y)))
+    dataset_augmented = tf.data.Dataset.concatenate(dataset_augmented, augmentation)
+    return dataset_augmented
+
 def plot_results(idx):
     true_img = smpl_imgs[idx]
     true_img = true_img[None, ..., None]
@@ -47,6 +58,7 @@ def plot_results(idx):
     pred_img = tf.argmax(pred_img, axis = -1)
     pred_img = pred_img[0, :, :]
     
+    # Should color legend be synchronized?
     fig, (ax1, ax2) = plt.subplots(1, 2)
     ax1.matshow(pred_img)
     ax1.set_title('PREDICTED')
@@ -64,34 +76,42 @@ smpl_imgs = load_images(img_paths)
 mask_paths = list_files("reference")
 smpl_masks = load_images(mask_paths)
 
+## check category distribution
+distr = numpy.concatenate(smpl_masks).ravel()
+distr = pandas.DataFrame(distr)
+tab1 = pandas.DataFrame(distr).value_counts(normalize = True) * 100 # ID == 0 means NA
+
 ## create TF dataset
-BATCHSIZE = 5
+BATCHSIZE = 8
 smpl_dataset = tf.data.Dataset.from_tensor_slices((smpl_imgs, smpl_masks))
 smpl_dataset = smpl_dataset.map(preprocess_arrays)
 smpl_dataset = smpl_dataset.shuffle(BATCHSIZE * 128, reshuffle_each_iteration = False)
 
-# create training dataset
+## create training dataset
 size = numpy.floor(len(smpl_imgs) * 0.8)
 training_dataset = smpl_dataset.take(size)
+training_dataset = dataset_augmentation(training_dataset) ## augmentation
+training_dataset = training_dataset.shuffle(BATCHSIZE * 128, reshuffle_each_iteration = True)
 training_dataset = training_dataset.batch(BATCHSIZE)
 
-# create validation dataset
+## create validation dataset
 validation_dataset = smpl_dataset.skip(size)
 validation_dataset = validation_dataset.batch(BATCHSIZE)
 
 ### are images in the training and test sets definitely not repeated?
 
 ## check training data distribution
-for images, labels in training_dataset.take(-1):
-    distr = labels.numpy()
-distr = distr.reshape(-1)
+## remember that the input dataset is augmented
+distr = []
+for images, labels in training_dataset.as_numpy_iterator():
+  distr.append(labels)
+distr = numpy.concatenate(distr).ravel()
 numpy.unique(distr)
 numpy.max(distr) # maximum category ID
-tab = pandas.DataFrame(distr).value_counts(normalize = True) * 100 # ID == 0 means NA
-
+tab2 = pandas.DataFrame(distr).value_counts(normalize = True) * 100 # ID == 0 means NA
 
 ## model training
-unet_model = build_unet_model(max_class = 26)
+unet_model = build_unet_model(max_class = 56)
 unet_model.compile(optimizer = tf.keras.optimizers.Adam(),
                    loss = "sparse_categorical_crossentropy",
                    metrics = "accuracy")
@@ -106,4 +126,4 @@ plt.show()
 idx = numpy.random.choice(len(smpl_dataset), 1)[0]
 plot_results(idx)
 
-    
+
