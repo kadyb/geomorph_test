@@ -1,8 +1,11 @@
 import os
-import math
+import numpy
+import pandas
 import skimage.io
 import tensorflow as tf
-from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+exec(open("unet.py").read()) # load unet model
 
 
 ### functions ---------------------------------------------------------
@@ -19,7 +22,7 @@ def load_images(paths):
     for i in range(len(paths)):
         img = skimage.io.imread(paths[i])
         if img.shape != (128, 128):
-            # order = 0 is nearest-neighbor resampling
+            # order == 0 is nearest-neighbor resampling
             img = skimage.transform.resize(img, (128, 128), order = 0)
             # maybe it is better to fill the empty space with 0?
         lst.append(img)
@@ -37,19 +40,20 @@ def preprocess_arrays(img_array, mask_array):
     
     return img, mask
 
-def cnn_model(num_classes):
-    model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation = "relu",
-                            input_shape = (128, 128, 1)))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation = "relu"))
-    model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation = "relu"))
-    model.add(layers.Flatten())
-    model.add(layers.Dense(128, activation = "relu"))
-    model.add(layers.Dense(num_classes))
-    return model
-
+def plot_results(idx):
+    true_img = smpl_imgs[idx]
+    true_img = true_img[None, ..., None]
+    pred_img = unet_model.predict(true_img)
+    pred_img = tf.argmax(pred_img, axis = -1)
+    pred_img = pred_img[0, :, :]
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.matshow(pred_img)
+    ax1.set_title('PREDICTED')
+    ax1.axis('off')
+    ax2.matshow(smpl_masks[idx])
+    ax2.set_title('TRUE')
+    ax2.axis('off')
 
 ### code --------------------------------------------------------------
 
@@ -60,14 +64,14 @@ smpl_imgs = load_images(img_paths)
 mask_paths = list_files("reference")
 smpl_masks = load_images(mask_paths)
 
-##  create TF dataset
+## create TF dataset
 BATCHSIZE = 5
 smpl_dataset = tf.data.Dataset.from_tensor_slices((smpl_imgs, smpl_masks))
 smpl_dataset = smpl_dataset.map(preprocess_arrays)
 smpl_dataset = smpl_dataset.shuffle(BATCHSIZE * 128, reshuffle_each_iteration = False)
 
 # create training dataset
-size = math.floor(len(smpl_imgs) * 0.8)
+size = numpy.floor(len(smpl_imgs) * 0.8)
 training_dataset = smpl_dataset.take(size)
 training_dataset = training_dataset.batch(BATCHSIZE)
 
@@ -77,19 +81,29 @@ validation_dataset = validation_dataset.batch(BATCHSIZE)
 
 ### are images in the training and test sets definitely not repeated?
 
-### how to check distribution of training and validation datasets?
+## check training data distribution
 for images, labels in training_dataset.take(-1):
-    x = labels.numpy()
-x = x.reshape(-1)
-
+    distr = labels.numpy()
+distr = distr.reshape(-1)
+numpy.unique(distr)
+numpy.max(distr) # maximum category ID
+tab = pandas.DataFrame(distr).value_counts(normalize = True) * 100 # ID == 0 means NA
 
 
 ## model training
-model = cnn_model(num_classes = 11)
-model.compile(optimizer = "adam",
-              loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
-              metrics = ["accuracy"])
-history = model.fit(training_dataset, validation_data = validation_dataset,
-                    epochs = 10)
-#> InvalidArgumentError:  logits and labels must have the same first dimension,
-#> got logits shape [5,10] and labels shape [81920]
+unet_model = build_unet_model(max_class = 26)
+unet_model.compile(optimizer = tf.keras.optimizers.Adam(),
+                   loss = "sparse_categorical_crossentropy",
+                   metrics = "accuracy")
+history = unet_model.fit(training_dataset, validation_data = validation_dataset,
+                         epochs = 5)
+
+## plot
+pandas.DataFrame(history.history).plot(figsize = (8, 5))
+plt.show()
+
+## plot sample result
+idx = numpy.random.choice(len(smpl_dataset), 1)[0]
+plot_results(idx)
+
+    

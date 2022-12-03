@@ -13,14 +13,14 @@ def downsample_block(x, n_filters):
    return f, p
 
 def upsample_block(x, conv_features, n_filters):
-   x = layers.Conv2DTranspose(n_filters, 3, 2, padding="same")(x)
+   x = layers.Conv2DTranspose(n_filters, 3, 2, padding = "same")(x)
    x = layers.concatenate([x, conv_features])
    x = layers.Dropout(0.3)(x)
    x = double_conv_block(x, n_filters)
    return x
 
-def build_unet_model():
-  inputs = layers.Input(shape=(128,128,3))
+def build_unet_model(max_class):
+  inputs = layers.Input(shape = (128, 128, 1)) # x, y, layers
   f1, p1 = downsample_block(inputs, 64)
   f2, p2 = downsample_block(p1, 128)
   f3, p3 = downsample_block(p2, 256)
@@ -30,6 +30,7 @@ def build_unet_model():
   u7 = upsample_block(u6, f3, 256)
   u8 = upsample_block(u7, f2, 128)
   u9 = upsample_block(u8, f1, 64)
-  outputs = layers.Conv2D(3, 1, padding="same", activation = "softmax")(u9)
-  unet_model = tf.keras.Model(inputs, outputs, name="U-Net")
+  # maximum class ID + 1
+  outputs = layers.Conv2D(max_class + 1, 1, padding = "same", activation = "softmax")(u9)
+  unet_model = tf.keras.Model(inputs, outputs, name = "U-Net")
   return unet_model
