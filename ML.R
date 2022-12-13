@@ -38,8 +38,8 @@ variables = list.files("variables", pattern = ".tif", full.names = TRUE)
 var = read_stars(variables, proxy = TRUE)
 
 class_vec = integer()
-names = c("elevation", "slope", "convergence", "stdev", "median", "multitpi",
-          "convexity", "entropy", "openness")
+names = c("elevation", "slope", "stdev", "multitpi", "convexity",
+           "entropy", "openness", "median500", "median1000")
 var_df = data.frame()
 
 for (f in files) {
@@ -50,7 +50,6 @@ for (f in files) {
   var_crop = st_as_stars(var_crop)
   var_crop = st_warp(var_crop, class, method = "near") # align grids
   class = as.vector(class[[1]])
-  idx = which(is.na(class))
   var_crop = data.frame(var_crop)[, -c(1, 2)]
   colnames(var_crop) = names
 
@@ -59,32 +58,26 @@ for (f in files) {
 
 }
 
-rm(var_crop, class, idx)
+rm(var_crop, class)
 df = cbind(class = factor(class_vec), var_df) # ID class as factor
 df = df[which(complete.cases(df)), ] # this is faster than `na.omit`
 rm(var_df, class_vec)
 
 ## deal with class inbalance
 ## optionally, we can add weights to the classes
-tab = table(df$class)
-sort(round(tab, 3))
+tab = sort(table(df$class))
+tab
 
-## reduce classes: 14, 29, 26, 25, 3, 43, 30 to 250k observations
-## TODO: maybe rewrite this to loop
-idx = sample(which(df$class == 14), 2490000)
-df[idx, ] = NA
-idx = sample(which(df$class == 29), 1260000)
-df[idx, ] = NA
-idx = sample(which(df$class == 26), 1090000)
-df[idx, ] = NA
-idx = sample(which(df$class == 25), 600000)
-df[idx, ] = NA
-idx = sample(which(df$class == 3), 110000)
-df[idx, ] = NA
-idx = sample(which(df$class == 43), 31000)
-df[idx, ] = NA
-idx = sample(which(df$class == 30), 18000)
-df[idx, ] = NA
+## reduce largest classes to 150k observations
+size = 150000
+cols_idx = names(which(tab > size))
+
+for (i in cols_idx) {
+  val = tab[[i]] - size
+  idx = sample(which(df$class == i), val)
+  df[idx, ] = NA
+}
+rm(idx)
 
 ## remove smallest classes: 50, 21
 df[which(df$class == 50), ] = NA
@@ -92,6 +85,8 @@ df[which(df$class == 21), ] = NA
 
 df = df[which(complete.cases(df)), ]
 df$class = droplevels(df$class)
+
+saveRDS(df, "dataset.rds")
 
 ### machine learning ###
 library("corrr")
@@ -114,12 +109,12 @@ test = test[1:500000, ] ### limit test data
 rf_mdl = ranger(class ~ ., train, importance = "impurity", mtry = 3,
                 seed = 1)
 rf_mdl$predictions = NULL # remove predictions from model
-rf_mdl$prediction.error #> 0.147715
+rf_mdl$prediction.error #> 0.10996
 
 pred = predict(rf_mdl, test[, -1])$predictions
-accuracy_vec(test$class, pred) #> 0.855244
-kap_vec(test$class, pred) #> 0.8410093
-mcc_vec(test$class, pred) #> 0.8416017
+accuracy_vec(test$class, pred) #> 0.893332
+kap_vec(test$class, pred) #> 0.882949
+mcc_vec(test$class, pred) #> 0.8833784
 
 # importance plot
 barplot(sort(importance(rf_mdl)))
@@ -131,8 +126,8 @@ files = list.files("reference", pattern = ".tif", full.names = TRUE)
 variables = list.files("variables", pattern = ".tif", full.names = TRUE)
 var = read_stars(variables, proxy = TRUE)
 rf_mdl = readRDS("rf_mdl.rds")
-names = c("elevation", "slope", "convergence", "stdev", "median", "multitpi",
-          "convexity", "entropy", "openness")
+names = c("elevation", "slope", "stdev", "multitpi", "convexity",
+          "entropy", "openness", "median500", "median1000")
 
 n = 1 # number of sheet
 r = read_stars(files[n])
