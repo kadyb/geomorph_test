@@ -1,0 +1,58 @@
+ID_FORM	PL	EN	CODE
+NA	NA	NA	0
+A05	antropogeniczny zbiornik wodny	anthropogenic water reservoir	0
+BB	brak badañ	lack of research	0
+D01	powierzchnia zrównania w po³o¿eniu wierzchowinowym	equalization surface in the top position	3
+D02	powierzchnia zrównania w po³o¿eniu stokowym	equalization surface in the slope position	4
+D03	powierzchnia zrównania w dnach kotlin	equalization surface in the basins of valleys	5
+D09	czo³o progu strukturalnego (kuesty)	front of the structural threshold (cuesta)	6
+D10	zapro¿e progu strukturalnego (kuesty)	back of the structural threshold (cuesta)	7
+D13	kotlina œródgórska	intra-mountain basin	8
+D17	ostaniec denudacyjny - twardzielec	denudational outcrop - inselberg	9
+D18	ostaniec denudacyjny - nek	denudational outcrop - volcanic neck	10
+D19	ostaniec denudacyjny - góra sto³owa	denudational outcrop - tableland	11
+D20	ostaniec denudacyjny - pozosta³e	denudational outcrop - others	12
+D21	pojedyncza ska³ka	single rock	13
+D24	œciana skalna lub stok skalny	rock wall or rock slope	14
+D25	akumulacyjny stok gruzowy	accumulative rubble slope	15
+D26	osuwisko aktywne	active landslide	16
+D34	nisza Ÿródliskowa	headwater niche	17
+E02	niecka deflacyjna	deflation trough	18
+E04	pojedyncza wydma ustabilizowana	single stabilized dune	19
+E05	zespó³ wydm ustabilizowanych	complex of stabilized dunes	20
+E06	równina zwydmiona	dunes plain	21
+E07	garb lessowy	loess hump	22
+E08	równina lessowa	loess plain	23
+E09	równina eolicznych piasków pokrywowych	plain of aeolian sands	24
+F07	dno doliny p³askodennej rzeki anastomozuj¹cej	valley bottom of a flat-bottomed river	25
+F08	terasa zalewowa	floodplain	26
+F19	sto¿ek nap³ywowy	alluvial fan	27
+F20	równina proluwialna	proluvial plain	28
+G01	wysoczyzna morenowa p³aska	flat moraine upland	29
+G02	wysoczyzna morenowa falista	wavy moraine upland	30
+G06	drumliny i formy pokrewne	drumlins and related forms	31
+G07	wielkoskalowe prostoliniowe wa³y moreny dennej	large-scale rectilinear shafts	32
+G12	¿³ób polodowcowy	postglacial gutter	33
+G16	próg kot³a polodowcowego lub doliny wisz¹cej	sill of a glacial cirque or valley	34
+G18	rynna polodowcowa	postglacial trough	35
+G19	krête wa³y z erozji wód subglacjalnych	winding dikes from subglacial water erosion	36
+G23	sto¿ek glacimarginalny	glacimarginal cone	37
+G24	krawêdŸ kontaktu lodowego	ice contact edge	38
+G25	dno doliny z pokryw¹ fluwioglacjaln¹	valley bottom with fluvioglacial cover	39
+G26	dno doliny z pokryw¹ morenow¹	valley bottom with moraine cover	40
+G27	morena pagórkowata	hilly moraine	41
+G29	kem i stoliwo kemowe	kame and kame table	42
+G30	terasa kemowa	kame terrace	43
+G31	zag³êbienie wytopiskowe	melting cavity	44
+G32	sto¿ek sandrowy/glacifluwialny	sander/glacifluvial cone	45
+G33	równina lub szlak sandrowy	plain or sandy trail	46
+G34	dolina proglacjalna	proglacial valley	47
+G35	dolina marginalna	marginal valley	48
+G36	równina erozyjna wód roztopowych	meltwater erosion plain	49
+L05	pla¿a	beach	50
+L06	wydmy nadbrze¿ne	coastal dunes	51
+L07	kosa lub mierzeja	scythe or spit	52
+L08	delta wsteczna	retrograde delta	53
+L09	równina nadmorska	coastal plain	54
+Y01	równina denudacji peryglacjalnej	periglacial denudation plain	55
+Y02	reliktowy lodowiec gruzowy	relict rock glacier	56
